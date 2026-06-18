@@ -1,0 +1,10 @@
+.env
+backend/venv/
+backend/.venv/
+backend/database.db
+__pycache__/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/
+vendor/
