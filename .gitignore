@@ -2,6 +2,7 @@
 backend/venv/
 backend/.venv/
 backend/database.db
+backend/.jwt_secret
 __pycache__/
 *.py[cod]
 .DS_Store

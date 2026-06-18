@@ -20,7 +20,20 @@ load_dotenv(BASE_DIR.parent / ".env")
 
 database_setting = Path(os.getenv("DATABASE_PATH", "backend/database.db"))
 DB_PATH = database_setting if database_setting.is_absolute() else BASE_DIR.parent / database_setting
-JWT_SECRET = os.getenv("JWT_SECRET") or secrets.token_urlsafe(48)
+
+
+def load_jwt_secret() -> str:
+    if os.getenv("JWT_SECRET"):
+        return os.environ["JWT_SECRET"]
+    secret_file = BASE_DIR / ".jwt_secret"
+    if secret_file.exists():
+        return secret_file.read_text(encoding="utf-8").strip()
+    secret = secrets.token_urlsafe(48)
+    secret_file.write_text(secret, encoding="utf-8")
+    return secret
+
+
+JWT_SECRET = load_jwt_secret()
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "120"))
 security = HTTPBearer(auto_error=False)
@@ -494,3 +507,10 @@ def toggle_like(post_id: int, user: dict = Depends(authenticate)):
             liked = True
         count = db.execute("SELECT COUNT(*) FROM likes WHERE post_id = ?", (post_id,)).fetchone()[0]
     return {"count": count, "liked": liked}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    server_port = int(os.getenv("SERVER_PORT", os.getenv("PORT", "8000")))
+    uvicorn.run(app, host="0.0.0.0", port=server_port)

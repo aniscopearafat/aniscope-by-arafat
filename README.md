@@ -85,6 +85,8 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
+The backend can also start directly with `python backend/main.py`. It automatically binds to `SERVER_PORT` or `PORT` when supplied by a hosting panel such as HidenCloud.
+
 On first start, FastAPI creates `backend/database.db`, creates all tables, and inserts the sample administrator, posts, and characters.
 
 - API root: <http://localhost:8000>
