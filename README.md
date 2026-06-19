@@ -13,6 +13,8 @@ No WordPress, Laravel, or Django is used. The included character and editorial a
 - Member-only article comments and likes, plus link sharing
 - Administrator-managed moderator accounts and site/donation information
 - Create, edit, and delete posts and characters
+- Upload post and character images directly from the admin panel (JPG, PNG, WebP, or GIF; up to 5 MB)
+- Use direct image URLs or ImgBB `<a><img src="…"></a>` embed snippets; only the safe image source is stored
 - Draft/published post status and Anime/Manga/News categories
 - Optional privacy-enhanced YouTube embeds on posts
 - FastAPI REST API with JWT-protected write operations
@@ -32,10 +34,13 @@ aniscopewebsite/
 │   ├── layout.php
 │   ├── login.php
 │   ├── logout.php
-│   └── posts.php
+│   ├── moderators.php
+│   ├── posts.php
+│   └── settings.php
 ├── assets/
 │   ├── css/style.css
 │   ├── images/*.svg
+│   ├── uploads/.htaccess
 │   └── js/main.js
 ├── backend/
 │   ├── main.py
@@ -45,7 +50,9 @@ aniscopewebsite/
 │   ├── cards.php
 │   ├── footer.php
 │   ├── header.php
-│   └── listing.php
+│   ├── listing.php
+│   ├── media.php
+│   └── session.php
 ├── index.php
 ├── anime.php
 ├── characters.php
@@ -60,7 +67,7 @@ aniscopewebsite/
 ## Requirements
 
 - Python 3.10+
-- PHP 8.0+ with `allow_url_fopen` enabled
+- PHP 8.0+ with cURL or `allow_url_fopen` enabled
 - A terminal on macOS, Linux, or WSL (Windows commands differ slightly)
 
 ## Local setup
@@ -117,6 +124,19 @@ Password: admin123
 
 The password is stored only as a bcrypt hash. Change this starter credential before deploying publicly. The shared PHP login detects the API role: administrators and moderators enter the dashboard, while members return to the public site. JWTs are stored in the server-side PHP session and write actions use CSRF tokens.
 
+## Images in posts and character profiles
+
+The post and character editors provide two image methods:
+
+1. Upload a JPG, PNG, WebP, or GIF file up to 5 MB. Files receive random names and are stored in `assets/uploads/`.
+2. Paste a direct HTTPS image URL or an ImgBB HTML snippet such as:
+
+```html
+<a href="https://ibb.co/example"><img src="https://i.ibb.co/example/image.png" alt="Example"></a>
+```
+
+AniScope extracts and validates the `img src`; it does not save or render arbitrary embed HTML. SVG uploads are intentionally disabled to avoid script injection. The included `assets/uploads/.htaccess` prevents uploaded PHP-like files from executing.
+
 ## API endpoints
 
 | Method | Endpoint | Access |
@@ -153,7 +173,41 @@ Filter posts with `?category=Anime` and/or `?status=published`.
 - Theme colors: edit the CSS custom properties at the top of `assets/css/style.css`.
 - Homepage background: sign in as administrator, open **Site settings**, and change the Homepage background image URL. Local paths and full image URLs are supported.
 
-## Deployment later
+## Current split-hosting deployment
+
+AniScope can be deployed across a Python host and a PHP host while keeping SQLite beside FastAPI:
+
+- Frontend: `https://aniscope.site.je` on InfinityFree
+- Backend API: HidenCloud Python server, exposed through an HTTPS reverse proxy
+- Database: persistent `backend/database.db` on HidenCloud
+
+### HidenCloud backend
+
+Use the Python server type and configure:
+
+```text
+Git Repo Address: https://github.com/aniscopearafat/aniscope-by-arafat.git
+Git Branch: codex/hidencloud-deployment
+App Py File: backend/main.py
+Requirements File: backend/requirements.txt
+Auto Update: OFF after the initial private-repository clone
+```
+
+`backend/main.py` binds automatically to `SERVER_PORT` or `PORT`. If no `JWT_SECRET` environment variable exists, the backend generates one and persists it in ignored file `backend/.jwt_secret` so sessions survive restarts.
+
+For a private GitHub repository, use a fine-grained, read-only, single-repository token only for the initial clone. Remove it from the hosting panel and revoke it afterward. Never include a token in screenshots, source code, or `.env.example`.
+
+### InfinityFree PHP frontend
+
+Upload only the frontend files to `htdocs`; do not expose `.git/`, `backend/`, `database.db`, or development virtual environments. Create a protected `.env` file containing:
+
+```env
+API_URL=https://YOUR-WORKING-HIDENCLOUD-PROXY
+```
+
+The PHP client uses cURL when available and falls back to URL streams. Ensure `index.php`, `admin/`, `assets/`, and `includes/` sit directly inside `htdocs`.
+
+## Other production deployment options
 
 For a small production deployment:
 
