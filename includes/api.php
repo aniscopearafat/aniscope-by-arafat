@@ -20,10 +20,33 @@ function env_value(string $key, string $default = ''): string
 
 function api_request(string $method, string $path, ?array $payload = null, ?string $token = null): array
 {
-    $url = rtrim(env_value('API_URL', 'http://localhost:8000'), '/') . $path;
-    $headers = ['Accept: application/json'];
+    $host = strtolower((string)($_SERVER['HTTP_HOST'] ?? 'localhost'));
+    $defaultApiUrl = ($host === 'localhost' || str_starts_with($host, '127.0.0.1'))
+        ? 'http://localhost:8000'
+        : 'https://aniscope.hidenfree.com';
+    $url = rtrim(env_value('API_URL', $defaultApiUrl), '/') . $path;
+    $headers = ['Accept: application/json', 'User-Agent: AniScope-Frontend/1.0'];
     if ($payload !== null) $headers[] = 'Content-Type: application/json';
     if ($token) $headers[] = 'Authorization: Bearer ' . $token;
+
+    if (function_exists('curl_init')) {
+        $curl = curl_init($url);
+        curl_setopt_array($curl, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_CONNECTTIMEOUT => 8,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_FOLLOWLOCATION => true,
+        ]);
+        if ($payload !== null) curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_SLASHES));
+        $body = curl_exec($curl);
+        $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+        $error = $body === false ? curl_error($curl) : null;
+        curl_close($curl);
+        $data = $body !== false ? json_decode($body, true) : null;
+        return ['ok' => $status >= 200 && $status < 300, 'status' => $status, 'data' => is_array($data) ? $data : [], 'error' => $error];
+    }
 
     $context = stream_context_create(['http' => [
         'method' => $method,

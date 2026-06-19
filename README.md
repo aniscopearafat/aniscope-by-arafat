@@ -44,6 +44,8 @@ All included character and editorial artwork is original placeholder art and doe
 * Manage Anime, Manga, and News content
 * Administrator-managed moderator accounts
 * Manage site and donation information
+* Upload post and character images (JPG, PNG, WebP, or GIF; maximum 5 MB)
+* Use direct image URLs or ImgBB `<a><img src="…"></a>` snippets
 
 ### Backend API
 
@@ -67,10 +69,13 @@ aniscopewebsite/
 │   ├── layout.php
 │   ├── login.php
 │   ├── logout.php
-│   └── posts.php
+│   ├── moderators.php
+│   ├── posts.php
+│   └── settings.php
 ├── assets/
 │   ├── css/style.css
 │   ├── images/*.svg
+│   ├── uploads/.htaccess
 │   └── js/main.js
 ├── backend/
 │   ├── main.py
@@ -80,7 +85,9 @@ aniscopewebsite/
 │   ├── cards.php
 │   ├── footer.php
 │   ├── header.php
-│   └── listing.php
+│   ├── listing.php
+│   ├── media.php
+│   └── session.php
 ├── index.php
 ├── anime.php
 ├── characters.php
@@ -100,7 +107,7 @@ Before running the project locally, make sure you have:
 
 * Python 3.10+
 * PHP 8.0+
-* PHP `allow_url_fopen` enabled
+* PHP cURL or `allow_url_fopen` enabled
 * A terminal on macOS, Linux, or WSL
 
 > Windows commands may be slightly different depending on your setup.
@@ -129,6 +136,12 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
+```
+
+The backend can also start directly and bind to a hosting panel's assigned port:
+
+```bash
+python backend/main.py
 ```
 
 On the first start, FastAPI will automatically:
@@ -187,6 +200,21 @@ The shared PHP login automatically detects the user role:
 * Members are returned to the public website
 * JWT tokens are stored in the server-side PHP session
 * Write actions use CSRF tokens for extra protection
+
+---
+
+## 🖼️ Post and Character Images
+
+The post and character editors support two image methods:
+
+1. Upload a JPG, PNG, WebP, or GIF file up to 5 MB. Files receive random names and are stored in `assets/uploads/`.
+2. Paste a direct HTTPS image URL or an ImgBB snippet:
+
+```html
+<a href="https://ibb.co/example"><img src="https://i.ibb.co/example/image.png" alt="Example"></a>
+```
+
+AniScope extracts and validates only the `img src`; arbitrary embed HTML is never stored or rendered. SVG uploads are disabled to prevent script injection, and `assets/uploads/.htaccess` blocks uploaded PHP-like files from executing.
 
 ---
 
@@ -304,6 +332,36 @@ Before deploying publicly:
 ---
 
 ## 🚀 Deployment Notes
+
+### Current split-hosting setup
+
+The project supports a PHP frontend and Python backend on separate hosts:
+
+* Frontend: InfinityFree, with public files directly inside `htdocs`
+* Backend: HidenCloud Python server with SQLite stored beside FastAPI
+* Communication: the frontend `.env` points `API_URL` to the working HTTPS API proxy
+
+HidenCloud configuration:
+
+```text
+Git Repo Address: https://github.com/aniscopearafat/aniscope-by-arafat.git
+Git Branch: main
+App Py File: backend/main.py
+Requirements File: backend/requirements.txt
+Auto Update: OFF after the initial private-repository clone
+```
+
+If no `JWT_SECRET` environment variable exists, the backend creates ignored file `backend/.jwt_secret` and reuses it across restarts. For a private repository, use a fine-grained, read-only, single-repository token only for the initial clone, then remove and revoke it. Never expose access tokens in screenshots.
+
+InfinityFree configuration:
+
+```env
+API_URL=https://YOUR-WORKING-HIDENCLOUD-PROXY
+```
+
+Upload only the PHP pages, `admin/`, `assets/`, and `includes/` to `htdocs`. Never upload `.git/`, `backend/`, development virtual environments, or the SQLite database to the public web root.
+
+### Traditional single-server deployment
 
 For a small production deployment:
 

@@ -35,7 +35,15 @@ document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventLis
 const imageInput = document.querySelector('input[name="image_url"]');
 imageInput?.addEventListener('input', () => {
   const preview = document.querySelector('#image-preview');
-  if (preview) preview.src = imageInput.value;
+  if (!preview) return;
+  const htmlMatch = imageInput.value.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i);
+  preview.src = htmlMatch ? htmlMatch[1] : imageInput.value;
+});
+
+document.querySelector('[data-image-file]')?.addEventListener('change', event => {
+  const file = event.currentTarget.files?.[0];
+  const preview = document.querySelector('#image-preview');
+  if (file && preview) preview.src = URL.createObjectURL(file);
 });
 
 const homeBackgroundInput = document.querySelector('[data-home-background-input]');
