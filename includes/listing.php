@@ -1,16 +1,198 @@
 <?php
+
 require_once __DIR__ . '/api.php';
-$posts = api_data('/api/posts?category=' . urlencode($category) . '&status=published');
+
+/*
+|--------------------------------------------------------------------------
+| Current category
+|--------------------------------------------------------------------------
+*/
+
+$category = $category ?? 'Anime';
+
+/*
+|--------------------------------------------------------------------------
+| Load published posts
+|--------------------------------------------------------------------------
+*/
+
+$posts = api_data(
+    '/api/posts?category=' . urlencode($category) . '&status=published'
+);
+
+if (!is_array($posts)) {
+    $posts = [];
+}
+
+/*
+|--------------------------------------------------------------------------
+| Page header
+|--------------------------------------------------------------------------
+*/
+
 require __DIR__ . '/header.php';
 require_once __DIR__ . '/cards.php';
-$descriptions = ['Anime' => 'Deep dives, thoughtful reviews, and beginner-friendly guides.', 'Manga' => 'Chapter updates, story analysis, and page-turning discoveries.', 'News' => 'The latest signals, trends, and conversations from anime culture.'];
+
+/*
+|--------------------------------------------------------------------------
+| Category descriptions
+|--------------------------------------------------------------------------
+*/
+
+$descriptions = [
+    'Anime' => 'Deep dives, thoughtful reviews, and beginner-friendly guides.',
+    'Manga' => 'Chapter updates, story analysis, and page-turning discoveries.',
+    'News'  => 'The latest signals, trends, and conversations from anime culture.'
+];
+
+$categoryDescription = isset($descriptions[$category])
+    ? $descriptions[$category]
+    : 'Explore the latest stories from AniScope by Arafat.';
+
+/*
+|--------------------------------------------------------------------------
+| Category cover
+|--------------------------------------------------------------------------
+*/
+
 $coverKey = strtolower($category) . '_cover_url';
 $coverUrl = setting_value($siteSettings, $coverKey);
-$heroStyle = $coverUrl ? " style=\"background:linear-gradient(rgba(8,7,18,.18),var(--ink)),url('" . e(image_url($coverUrl)) . "') center/cover\"" : '';
+
+$heroStyle = '';
+
+if (!empty($coverUrl)) {
+
+    $imageUrl = image_url($coverUrl);
+
+    if (!empty($imageUrl)) {
+
+        $heroStyle =
+            ' style="background:linear-gradient(rgba(8,7,18,.18),var(--ink)),url(\'' .
+            e($imageUrl) .
+            '\') center/cover"';
+    }
+}
+
 ?>
-<section class="page-hero"<?= $heroStyle ?>><div class="container reveal"><span class="eyebrow">AniScope collection</span><h1><?= e($category) ?></h1><p><?= e($descriptions[$category]) ?></p></div></section>
-<section class="section section-dark"><div class="container"><div class="filter-bar"><span><?= count($posts) ?> stories</span><div><button class="filter active">Latest</button><button class="filter">Popular</button></div></div><div class="card-grid"><?php foreach ($posts as $post) post_card($post); ?><?php if (!$posts) empty_state('No published stories in this collection yet.'); ?></div></div></section>
-<?php if ($category === 'Anime'): ?>
-    <?php show_native_ad(); ?>
-<?php endif; ?>
+
+<!-- =========================================================
+     CATEGORY HERO
+========================================================= -->
+
+<section class="page-hero"<?= $heroStyle ?>>
+
+    <div class="container reveal">
+
+        <span class="eyebrow">
+            AniScope collection
+        </span>
+
+        <h1>
+            <?= e($category) ?>
+        </h1>
+
+        <p>
+            <?= e($categoryDescription) ?>
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     STORIES SECTION
+========================================================= -->
+
+<section class="section section-dark">
+
+    <div class="container">
+
+        <!-- Filter bar -->
+
+        <div class="filter-bar">
+
+            <span>
+                <?= count($posts) ?>
+                <?= count($posts) === 1 ? 'story' : 'stories' ?>
+            </span>
+
+            <div>
+
+                <button
+                    class="filter active"
+                    type="button"
+                >
+                    Latest
+                </button>
+
+                <button
+                    class="filter"
+                    type="button"
+                >
+                    Popular
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             STORY CARDS
+        ================================================== -->
+
+        <?php if (!empty($posts)): ?>
+
+            <div class="card-grid">
+
+                <?php foreach ($posts as $post): ?>
+
+                    <?php
+                    if (is_array($post)) {
+                        post_card($post);
+                    }
+                    ?>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        <?php else: ?>
+
+            <?php
+            empty_state(
+                'No published stories in this collection yet.'
+            );
+            ?>
+
+        <?php endif; ?>
+
+
+        <!-- =================================================
+             ADSTERRA NATIVE BANNER
+             
+             Keep this section.
+             Currently shown on Anime listing only.
+        ================================================== -->
+
+        <?php if ($category === 'Anime'): ?>
+
+            <?php
+            if (function_exists('show_native_ad')) {
+                show_native_ad();
+            }
+            ?>
+
+        <?php endif; ?>
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
 <?php require __DIR__ . '/footer.php'; ?>
