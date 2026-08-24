@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/api.php';
+require_once __DIR__ . '/includes/ads.php';
 $posts = api_data('/api/posts?status=published');
 $characters = api_data('/api/characters');
 $byCategory = fn(string $category) => array_values(array_filter($posts, fn($post) => $post['category'] === $category));
@@ -38,8 +39,10 @@ require_once __DIR__ . '/includes/cards.php';
     <div class="container">
         <div class="section-heading"><div><span class="eyebrow"><?= $eyebrow ?></span><h2><?= $heading ?></h2></div><a class="text-link" href="<?= $link ?>">View all <span>→</span></a></div>
         <div class="card-grid"><?php foreach (array_slice($byCategory($category), 0, 4) as $post) post_card($post); ?><?php if (!$byCategory($category)) empty_state(); ?></div>
+        <?php show_native_ad(); ?>
     </div>
 </section>
 <?php endforeach; ?>
+<?php show_native_ad(); ?>
 <section class="cta-band"><div class="container"><span class="eyebrow">Your next obsession starts here</span><h2>Explore a universe of stories.</h2><a class="button primary" href="/anime.php">Start exploring →</a></div></section>
 <?php require __DIR__ . '/includes/footer.php'; ?>

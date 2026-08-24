@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/ads.php';
+?>
 </main>
 <footer class="site-footer">
     <div class="container footer-grid">
@@ -12,5 +15,7 @@
     <div class="container footer-bottom"><span><?= e($siteSettings['copyright_text'] ?? ('© '.date('Y').' AniScope by Arafat')) ?></span><span>Made with curiosity and a little neon.</span></div>
 </footer>
 <script src="/assets/js/main.js"></script>
+<?php show_social_bar(); ?>
+<?php show_popunder(); ?>
 </body>
 </html>
