@@ -4,6 +4,7 @@ require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/api.php';
 require_once __DIR__ . '/includes/ads.php';
 require_once __DIR__ . '/includes/cards.php';
+require_once __DIR__ . '/includes/streaming.php';
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 
@@ -313,7 +314,33 @@ require __DIR__ . '/includes/header.php';
          ARTICLE LAYOUT
     ====================================================== -->
 
-    <div class="container article-layout">
+    <?php if (!empty($post['stream_anime_id'])): ?>
+
+<section class="article-watch-cta">
+    <div class="container">
+
+        <div class="article-watch-inner">
+
+            <div>
+                <span class="eyebrow">Available to watch</span>
+                <h2>Watch this anime on AniScope</h2>
+            </div>
+
+            <a
+                class="button primary"
+                href="/watch.php?anime=<?= (int)$post['stream_anime_id'] ?>"
+            >
+                ▶ Watch Anime
+            </a>
+
+        </div>
+
+    </div>
+</section>
+
+<?php endif; ?>
+
+<div class="container article-layout">
 
 
         <!-- Share rail -->

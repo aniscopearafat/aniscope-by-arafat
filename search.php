@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/api.php';
 require_once __DIR__ . '/includes/ads.php';
 require_once __DIR__ . '/includes/cards.php';
+require_once __DIR__ . '/includes/streaming.php';
 
 
 /*
@@ -28,6 +29,7 @@ $activePage = '';
 
 $posts = [];
 $characters = [];
+$streamAnime = [];
 
 
 if ($query !== '' && mb_strlen($query) >= 2) {
@@ -94,6 +96,31 @@ if ($query !== '' && mb_strlen($query) >= 2) {
     }
 }
 
+
+
+if ($query !== '' && mb_strlen($query) >= 2) {
+
+    $allStreamAnime = stream_anime_list(true);
+
+    foreach ($allStreamAnime as $anime) {
+
+        $haystack = strtolower(
+            ($anime['title'] ?? '') . ' ' .
+            ($anime['description'] ?? '') . ' ' .
+            ($anime['genres'] ?? '') . ' ' .
+            ($anime['status'] ?? '')
+        );
+
+        if (
+            str_contains(
+                $haystack,
+                strtolower($query)
+            )
+        ) {
+            $streamAnime[] = $anime;
+        }
+    }
+}
 
 require __DIR__ . '/includes/header.php';
 
@@ -213,13 +240,50 @@ require __DIR__ . '/includes/header.php';
 
                 <span>
 
-                    <?= count($posts) + count($characters) ?>
+                    <?= count($posts) + count($characters) + count($streamAnime) ?>
 
                     results
 
                 </span>
 
             </div>
+
+
+            <!-- =================================================
+                 WATCH ANIME
+            ================================================== -->
+
+            <?php if (!empty($streamAnime)): ?>
+
+                <div class="search-section">
+
+                    <div class="section-heading">
+
+                        <div>
+                            <span class="eyebrow">
+                                Streaming
+                            </span>
+
+                            <h2>
+                                Watch Anime
+                            </h2>
+                        </div>
+
+                    </div>
+
+                    <div class="stream-card-grid">
+
+                        <?php foreach ($streamAnime as $anime): ?>
+
+                            <?php stream_anime_card($anime); ?>
+
+                        <?php endforeach; ?>
+
+                    </div>
+
+                </div>
+
+            <?php endif; ?>
 
 
             <!-- =================================================
@@ -304,7 +368,7 @@ require __DIR__ . '/includes/header.php';
                  NO RESULTS
             ================================================== -->
 
-            <?php if (empty($posts) && empty($characters)): ?>
+            <?php if (empty($posts) && empty($characters) && empty($streamAnime)): ?>
 
                 <div class="search-empty">
 

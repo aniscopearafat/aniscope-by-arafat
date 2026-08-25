@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/includes/api.php';
 require_once __DIR__ . '/includes/ads.php';
+require_once __DIR__ . '/includes/streaming.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -11,6 +12,7 @@ require_once __DIR__ . '/includes/ads.php';
 
 $posts = api_data('/api/posts?status=published');
 $characters = api_data('/api/characters');
+$streamAnime = stream_anime_list(true);
 
 
 /*

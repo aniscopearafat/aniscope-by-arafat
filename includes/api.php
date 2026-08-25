@@ -198,7 +198,7 @@ function seed_database(PDO $pdo): void
             ['Five Manga Chapters Worth Watching', 'Manga', 'Fresh story beats, sharp cliffhangers, and what readers are discussing this week.', 'Our fictional weekly manga desk highlights pacing, visual storytelling, and memorable reveals across the latest sample updates.', '/assets/images/post-manga.svg'],
             ['Summer Anime Radar', 'News', 'Original recommendations and production trends to keep on your seasonal watchlist.', "AniScope's sample newsroom looks at fantasy adventures, character dramas, and creative original series without relying on copyrighted promotional art.", '/assets/images/post-news.svg'],
         ];
-        $statement = $pdo->prepare('INSERT INTO posts (title, slug, category, excerpt, content, image_url, youtube_url, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $statement = $pdo->prepare('INSERT INTO posts (title, slug, category, excerpt, content, image_url, youtube_url, stream_anime_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         foreach ($posts as [$title, $category, $excerpt, $content, $image]) {
             $statement->execute([$title, slugify($title), $category, $excerpt, $content, $image, '', 'published', $timestamp, $timestamp]);
         }
@@ -359,6 +359,9 @@ function api_request(string $method, string $path, ?array $payload = null, ?stri
                 validate_text((string)($payload['content'] ?? ''), 2, 1000000, 'Content'),
                 validate_text((string)($payload['image_url'] ?? ''), 1, 500, 'Image'),
                 trim((string)($payload['youtube_url'] ?? '')),
+                !empty($payload['stream_anime_id'])
+                    ? (int)$payload['stream_anime_id']
+                    : null,
                 $status,
                 now_iso(),
             ];
@@ -366,11 +369,11 @@ function api_request(string $method, string $path, ?array $payload = null, ?stri
                 $exists = $pdo->prepare('SELECT id FROM posts WHERE id = ?');
                 $exists->execute([$postId]);
                 if (!$exists->fetch()) return api_response(false, 404, ['detail' => 'Post not found']);
-                $statement = $pdo->prepare('UPDATE posts SET title=?, slug=?, category=?, excerpt=?, content=?, image_url=?, youtube_url=?, status=?, updated_at=? WHERE id=?');
+                $statement = $pdo->prepare('UPDATE posts SET title=?, slug=?, category=?, excerpt=?, content=?, image_url=?, youtube_url=?, stream_anime_id=?, status=?, updated_at=? WHERE id=?');
                 $statement->execute([...$values, $postId]);
             } else {
-                $statement = $pdo->prepare('INSERT INTO posts (title, slug, category, excerpt, content, image_url, youtube_url, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-                $statement->execute([...$values, $values[8]]);
+                $statement = $pdo->prepare('INSERT INTO posts (title, slug, category, excerpt, content, image_url, youtube_url, stream_anime_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $statement->execute([...$values, $values[9]]);
                 $postId = (int)$pdo->lastInsertId();
             }
             $statement = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
