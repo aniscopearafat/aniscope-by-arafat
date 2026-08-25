@@ -2150,3 +2150,238 @@ select {
         padding: 0 12px;
     }
 }
+/* =========================================================
+   ANISCOPE GLOBAL SEARCH
+   Matches dark editorial / neon theme
+========================================================= */
+
+.nav-search {
+    display: flex;
+    align-items: center;
+    width: 190px;
+    height: 38px;
+    margin-left: 8px;
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .035);
+    overflow: hidden;
+    transition:
+        border-color .25s ease,
+        background .25s ease,
+        width .25s ease,
+        box-shadow .25s ease;
+}
+
+.nav-search:focus-within {
+    width: 215px;
+    border-color: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .055);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .025);
+}
+
+.nav-search input {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    padding: 0 5px 0 14px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.nav-search input::placeholder {
+    color: rgba(255, 255, 255, .42);
+}
+
+.nav-search input::-webkit-search-cancel-button {
+    filter: invert(1);
+    opacity: .5;
+}
+
+.nav-search button {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    margin-right: 2px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+.nav-search button:hover {
+    background: rgba(255, 255, 255, .08);
+    transform: scale(1.05);
+}
+
+
+/* =========================================================
+   SEARCH PAGE HERO
+========================================================= */
+
+.search-page-form {
+    width: min(100%, 680px);
+    margin: 30px auto 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-page-form input {
+    flex: 1;
+    min-width: 0;
+    height: 52px;
+    padding: 0 18px;
+
+    border: 1px solid rgba(255, 255, 255, .11);
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, .045);
+
+    color: inherit;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+
+    outline: none;
+
+    transition:
+        border-color .25s ease,
+        background .25s ease,
+        box-shadow .25s ease;
+}
+
+.search-page-form input::placeholder {
+    color: rgba(255, 255, 255, .40);
+}
+
+.search-page-form input:focus {
+    border-color: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, .065);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, .025);
+}
+
+
+/* Search button should use existing AniScope button
+   styling instead of introducing a new color. */
+
+.search-page-form .button {
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 14px;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   SEARCH RESULTS
+========================================================= */
+
+.search-section {
+    margin-bottom: 58px;
+}
+
+.search-section:last-child {
+    margin-bottom: 0;
+}
+
+.search-section .section-heading {
+    margin-bottom: 24px;
+}
+
+.search-section .section-heading h2 {
+    margin-top: 6px;
+}
+
+
+/* =========================================================
+   SEARCH EMPTY STATE
+========================================================= */
+
+.search-empty {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.search-empty-icon {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 20px;
+
+    display: grid;
+    place-items: center;
+
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, .035);
+
+    font-size: 22px;
+}
+
+.search-empty h2 {
+    margin: 0 0 10px;
+}
+
+.search-empty p {
+    margin: 6px 0;
+    color: rgba(255, 255, 255, .58);
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   SEARCH MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .nav-search {
+        width: 100%;
+        margin: 12px 0 6px;
+    }
+
+    .nav-search:focus-within {
+        width: 100%;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .search-page-form {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .search-page-form input {
+        width: 100%;
+        height: 50px;
+    }
+
+    .search-page-form .button {
+        width: 100%;
+        height: 50px;
+    }
+
+    .search-empty {
+        padding: 60px 18px;
+    }
+
+}
