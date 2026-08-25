@@ -15,6 +15,7 @@ require_once __DIR__ . '/ads.php';
     <div class="container footer-bottom"><span><?= e($siteSettings['copyright_text'] ?? ('© '.date('Y').' AniScope by Arafat')) ?></span><span>Made with curiosity and a little neon.</span></div>
 </footer>
 <script src="/assets/js/main.js"></script>
+<script src="/assets/js/player.js"></script>
 <?php show_social_bar(); ?>
 <?php show_popunder(); ?>
 </body>
