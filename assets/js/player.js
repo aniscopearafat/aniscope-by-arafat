@@ -137,3 +137,57 @@ document
         });
 
     });
+
+
+/* =========================================================
+   EPISODE SEARCH
+========================================================= */
+
+document
+    .querySelectorAll('[data-episode-search]')
+    .forEach(search => {
+
+        search.addEventListener('input', () => {
+
+            const query =
+                search.value
+                    .trim()
+                    .toLowerCase();
+
+            const list =
+                document.querySelector(
+                    '[data-episode-list]'
+                );
+
+            if (!list) {
+                return;
+            }
+
+            list
+                .querySelectorAll(
+                    '[data-episode-item]'
+                )
+                .forEach(item => {
+
+                    const number =
+                        (
+                            item.dataset.episodeNumber
+                            || ''
+                        ).toLowerCase();
+
+                    const text =
+                        item.textContent
+                            .toLowerCase();
+
+                    item.hidden =
+                        query !== ''
+                        &&
+                        !number.includes(query)
+                        &&
+                        !text.includes(query);
+
+                });
+
+        });
+
+    });
