@@ -5,3 +5,5 @@
 vendor/
 assets/uploads/*
 !assets/uploads/.htaccess
+*.bak
+*.stats-backup
