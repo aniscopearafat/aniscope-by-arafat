@@ -11,6 +11,16 @@ $results = [];
 $error = '';
 $bulkResults = [];
 
+$stats = [
+    'searched' => 0,
+    'found' => 0,
+    'added' => 0,
+    'replaced' => 0,
+    'not_found' => 0,
+    'failed' => 0,
+    'timeout' => 0
+];
+
 function normalize_character_name($name)
 {
     $name = strtolower(trim((string) $name));
@@ -243,6 +253,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         foreach ($uniqueNames as $inputName) {
 
+            $stats['searched']++;
+
             try {
 
                 /*
@@ -255,8 +267,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$searchResults) {
 
+                    $stats['not_found']++;
+
                     $bulkResults[] = [
-                        'status' => 'failed',
+                        'status' => 'not_found',
                         'input' => $inputName,
                         'name' => $inputName,
                         'message' => 'No AniList result found.'
@@ -275,8 +289,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$match) {
 
+                    $stats['not_found']++;
+
                     $bulkResults[] = [
-                        'status' => 'failed',
+                        'status' => 'not_found',
                         'input' => $inputName,
                         'name' => $inputName,
                         'message' => 'No accurate character match found.'
@@ -285,11 +301,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
 
+                $stats['found']++;
+
                 $anilistId = (int) (
                     $match['id'] ?? 0
                 );
 
                 if ($anilistId <= 0) {
+
+                    $stats['failed']++;
 
                     $bulkResults[] = [
                         'status' => 'failed',
@@ -309,8 +329,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (!$character) {
 
+                    $stats['not_found']++;
+
                     $bulkResults[] = [
-                        'status' => 'failed',
+                        'status' => 'not_found',
                         'input' => $inputName,
                         'name' => $inputName,
                         'message' => 'Character details not found.'
@@ -323,6 +345,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $character,
                     $characters
                 );
+
+                if ($saved['status'] === 'updated') {
+                    $stats['replaced']++;
+                } else {
+                    $stats['added']++;
+                }
 
                 $bulkResults[] = [
                     'status' => $saved['status'],
@@ -341,11 +369,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             } catch (Throwable $exception) {
 
+                $errorMessage = (string) $exception->getMessage();
+
+                $lowerError = strtolower($errorMessage);
+
+                $isTimeout =
+                    strpos($lowerError, 'timeout') !== false ||
+                    strpos($lowerError, 'timed out') !== false ||
+                    strpos($lowerError, 'operation timed out') !== false;
+
+                if ($isTimeout) {
+
+                    $stats['timeout']++;
+
+                    $resultStatus = 'timeout';
+
+                } else {
+
+                    $stats['failed']++;
+
+                    $resultStatus = 'failed';
+                }
+
                 $bulkResults[] = [
-                    'status' => 'failed',
+                    'status' => $resultStatus,
                     'input' => $inputName,
                     'name' => $inputName,
-                    'message' => $exception->getMessage()
+                    'message' => $errorMessage
                 ];
             }
         }
@@ -527,6 +577,69 @@ admin_header(
         style="margin-top:20px;"
     >
 
+        <div class="admin-list-heading">
+
+            <div>
+                <h2>Import Statistics</h2>
+                <p>Bulk character import summary.</p>
+            </div>
+
+        </div>
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:
+                    repeat(auto-fit,minmax(120px,1fr));
+                gap:12px;
+            "
+        >
+
+            <div class="admin-card">
+                <small>Searched</small>
+                <h2><?= (int) $stats['searched'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Found</small>
+                <h2><?= (int) $stats['found'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Added</small>
+                <h2><?= (int) $stats['added'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Replaced</small>
+                <h2><?= (int) $stats['replaced'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Not Found</small>
+                <h2><?= (int) $stats['not_found'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Errors</small>
+                <h2><?= (int) $stats['failed'] ?></h2>
+            </div>
+
+            <div class="admin-card">
+                <small>Timeouts</small>
+                <h2><?= (int) $stats['timeout'] ?></h2>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section
+        class="admin-card"
+        style="margin-top:20px;"
+    >
+
         <h2>Bulk Import Results</h2>
 
         <div
@@ -543,14 +656,29 @@ admin_header(
                 $status = $item['status'];
 
                 if ($status === 'created') {
+
                     $icon = '✓';
                     $label = 'Added';
+
                 } elseif ($status === 'updated') {
+
                     $icon = '↻';
-                    $label = 'Rewritten';
+                    $label = 'Replaced';
+
+                } elseif ($status === 'not_found') {
+
+                    $icon = '?';
+                    $label = 'Not Found';
+
+                } elseif ($status === 'timeout') {
+
+                    $icon = '⏱';
+                    $label = 'Timeout';
+
                 } else {
+
                     $icon = '✕';
-                    $label = 'Failed';
+                    $label = 'Error';
                 }
                 ?>
 
