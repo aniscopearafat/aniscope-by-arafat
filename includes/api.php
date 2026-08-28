@@ -101,6 +101,7 @@ function initialize_database(PDO $pdo): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         "CREATE TABLE IF NOT EXISTS posts (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            anilist_id INT UNSIGNED NULL,
             title VARCHAR(200) NOT NULL,
             slug VARCHAR(220) NOT NULL UNIQUE,
             category ENUM('Anime','Manga','News') NOT NULL,
@@ -112,7 +113,8 @@ function initialize_database(PDO $pdo): void
             created_at VARCHAR(40) NOT NULL,
             updated_at VARCHAR(40) NOT NULL,
             INDEX idx_posts_category (category),
-            INDEX idx_posts_status (status)
+            INDEX idx_posts_status (status),
+            UNIQUE KEY idx_posts_anilist_id (anilist_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
         "CREATE TABLE IF NOT EXISTS characters (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -351,7 +353,26 @@ function api_request(string $method, string $path, ?array $payload = null, ?stri
             if (!in_array($category, ['Anime', 'Manga', 'News'], true)) return api_response(false, 422, ['detail' => 'Invalid category']);
             $status = (string)($payload['status'] ?? 'published');
             if (!in_array($status, ['draft', 'published'], true)) return api_response(false, 422, ['detail' => 'Invalid status']);
+
+            $anilistId = null;
+
+            if (array_key_exists('anilist_id', $payload)) {
+                $candidateAniListId = (int)($payload['anilist_id'] ?? 0);
+                $anilistId = $candidateAniListId > 0 ? $candidateAniListId : null;
+            } elseif ($postId) {
+                $existingAniList = $pdo->prepare('SELECT anilist_id FROM posts WHERE id = ?');
+                $existingAniList->execute([$postId]);
+                $existingAniListRow = $existingAniList->fetch();
+
+                if ($existingAniListRow) {
+                    $anilistId = !empty($existingAniListRow['anilist_id'])
+                        ? (int)$existingAniListRow['anilist_id']
+                        : null;
+                }
+            }
+
             $values = [
+                $anilistId,
                 $title,
                 unique_slug($pdo, 'posts', $title, $postId),
                 $category,
@@ -369,11 +390,11 @@ function api_request(string $method, string $path, ?array $payload = null, ?stri
                 $exists = $pdo->prepare('SELECT id FROM posts WHERE id = ?');
                 $exists->execute([$postId]);
                 if (!$exists->fetch()) return api_response(false, 404, ['detail' => 'Post not found']);
-                $statement = $pdo->prepare('UPDATE posts SET title=?, slug=?, category=?, excerpt=?, content=?, image_url=?, youtube_url=?, stream_anime_id=?, status=?, updated_at=? WHERE id=?');
+                $statement = $pdo->prepare('UPDATE posts SET anilist_id=?, title=?, slug=?, category=?, excerpt=?, content=?, image_url=?, youtube_url=?, stream_anime_id=?, status=?, updated_at=? WHERE id=?');
                 $statement->execute([...$values, $postId]);
             } else {
-                $statement = $pdo->prepare('INSERT INTO posts (title, slug, category, excerpt, content, image_url, youtube_url, stream_anime_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-                $statement->execute([...$values, $values[9]]);
+                $statement = $pdo->prepare('INSERT INTO posts (anilist_id, title, slug, category, excerpt, content, image_url, youtube_url, stream_anime_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $statement->execute([...$values, $values[10]]);
                 $postId = (int)$pdo->lastInsertId();
             }
             $statement = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
