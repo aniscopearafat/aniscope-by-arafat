@@ -5874,3 +5874,9 @@ select {
         padding: 7px 9px;
     }
 }
+
+/* Fix character cards staying invisible after pagination */
+#character-grid .character-card.reveal {
+    opacity: 1;
+    transform: none;
+}
