@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/api.php';
+require_once __DIR__ . '/pagination.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,13 @@ $posts = api_data(
 if (!is_array($posts)) {
     $posts = [];
 }
+
+$pagination = paginate_items(
+    $posts,
+    20
+);
+
+$visiblePosts = $pagination['items'];
 
 /*
 |--------------------------------------------------------------------------
@@ -113,8 +121,13 @@ if (!empty($coverUrl)) {
         <div class="filter-bar">
 
             <span>
-                <?= count($posts) ?>
-                <?= count($posts) === 1 ? 'story' : 'stories' ?>
+                <?= (int) $pagination['total_items'] ?>
+                <?= $pagination['total_items'] === 1 ? 'story' : 'stories' ?>
+
+                <?php if ($pagination['total_items']): ?>
+                    · Showing
+                    <?= (int) $pagination['from'] ?>–<?= (int) $pagination['to'] ?>
+                <?php endif; ?>
             </span>
 
             <div>
@@ -142,11 +155,11 @@ if (!empty($coverUrl)) {
              STORY CARDS
         ================================================== -->
 
-        <?php if (!empty($posts)): ?>
+        <?php if (!empty($visiblePosts)): ?>
 
             <div class="card-grid">
 
-                <?php foreach ($posts as $post): ?>
+                <?php foreach ($visiblePosts as $post): ?>
 
                     <?php
                     if (is_array($post)) {
@@ -167,6 +180,14 @@ if (!empty($coverUrl)) {
             ?>
 
         <?php endif; ?>
+
+
+        <?php
+        render_pagination(
+            $pagination['page'],
+            $pagination['total_pages']
+        );
+        ?>
 
 
         <!-- =================================================

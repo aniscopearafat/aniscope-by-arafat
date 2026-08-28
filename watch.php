@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/streaming.php';
 require_once __DIR__ . '/includes/ads.php';
+require_once __DIR__ . '/includes/pagination.php';
 
 
 /*
@@ -47,6 +48,17 @@ $anime = $animeId
 if (!$animeId) {
 
     $watchAnimeList = stream_anime_list(true);
+
+    if (!is_array($watchAnimeList)) {
+        $watchAnimeList = [];
+    }
+
+    $pagination = paginate_items(
+        $watchAnimeList,
+        20
+    );
+
+    $visibleWatchAnime = $pagination['items'];
 
     $pageTitle = 'Watch Anime — AniScope by Arafat';
     $activePage = 'watch';
@@ -97,18 +109,22 @@ if (!$animeId) {
                 </div>
 
                 <span class="watch-library-count">
-                    <?= count($watchAnimeList) ?>
-                    title<?= count($watchAnimeList) === 1 ? '' : 's' ?>
+                    <?= (int) $pagination['total_items'] ?>
+                    title<?= $pagination['total_items'] === 1 ? '' : 's' ?>
+
+                    <?php if ($pagination['total_items']): ?>
+                        · <?= (int) $pagination['from'] ?>–<?= (int) $pagination['to'] ?>
+                    <?php endif; ?>
                 </span>
 
             </div>
 
 
-            <?php if ($watchAnimeList): ?>
+            <?php if ($visibleWatchAnime): ?>
 
                 <div class="stream-card-grid">
 
-                    <?php foreach ($watchAnimeList as $watchAnime): ?>
+                    <?php foreach ($visibleWatchAnime as $watchAnime): ?>
 
                         <?php
                         stream_anime_card($watchAnime);
@@ -127,6 +143,14 @@ if (!$animeId) {
                 ?>
 
             <?php endif; ?>
+
+
+            <?php
+            render_pagination(
+                $pagination['page'],
+                $pagination['total_pages']
+            );
+            ?>
 
 
             <?php show_native_ad(); ?>
