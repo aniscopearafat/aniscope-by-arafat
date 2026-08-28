@@ -7,54 +7,212 @@ function anilist_request($query, $variables = [])
         'variables' => $variables
     ]);
 
-    $ch = curl_init('https://graphql.anilist.co');
+    $maxAttempts = 7;
+    $attempt = 0;
 
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Accept: application/json'
-        ],
-        CURLOPT_TIMEOUT => 20,
-        CURLOPT_CONNECTTIMEOUT => 10,
-        CURLOPT_USERAGENT => 'AniScope/1.0'
-    ]);
+    while ($attempt < $maxAttempts) {
 
-    $body = curl_exec($ch);
-    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
+        $attempt++;
 
-    curl_close($ch);
+        $headers = [];
 
-    if ($body === false || $error !== '') {
-        throw new RuntimeException(
-            $error ?: 'AniList request failed.'
+        $ch = curl_init('https://graphql.anilist.co');
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ],
+            CURLOPT_HEADERFUNCTION => function ($curl, $header) use (&$headers) {
+
+                $length = strlen($header);
+                $parts = explode(':', $header, 2);
+
+                if (count($parts) === 2) {
+                    $headers[
+                        strtolower(trim($parts[0]))
+                    ] = trim($parts[1]);
+                }
+
+                return $length;
+            },
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_CONNECTTIMEOUT => 15,
+            CURLOPT_USERAGENT => 'AniScope/1.0'
+        ]);
+
+        $body = curl_exec($ch);
+
+        $status = (int) curl_getinfo(
+            $ch,
+            CURLINFO_HTTP_CODE
         );
-    }
 
-    if ($status < 200 || $status >= 300) {
+        $error = curl_error($ch);
+
+        curl_close($ch);
+
+
+        /*
+         * Successful response
+         */
+        if (
+            $body !== false &&
+            $error === '' &&
+            $status >= 200 &&
+            $status < 300
+        ) {
+
+            $json = json_decode(
+                $body,
+                true
+            );
+
+            if (!is_array($json)) {
+
+                if ($attempt < $maxAttempts) {
+                    sleep(2);
+                    continue;
+                }
+
+                throw new RuntimeException(
+                    'Invalid response from AniList.'
+                );
+            }
+
+            if (!empty($json['errors'])) {
+
+                $message =
+                    $json['errors'][0]['message']
+                    ?? 'AniList API error.';
+
+                /*
+                 * Some GraphQL errors may be temporary.
+                 */
+                if ($attempt < $maxAttempts) {
+                    sleep(2);
+                    continue;
+                }
+
+                throw new RuntimeException(
+                    $message
+                );
+            }
+
+            return $json['data'] ?? [];
+        }
+
+
+        /*
+         * Rate limit
+         */
+        if ($status === 429) {
+
+            $retryAfter = isset(
+                $headers['retry-after']
+            )
+                ? (int) $headers['retry-after']
+                : 0;
+
+            if ($retryAfter <= 0) {
+
+                /*
+                 * Exponential backoff:
+                 * 3, 6, 12, 20, 30...
+                 */
+                $retryAfter = min(
+                    30,
+                    max(
+                        3,
+                        (int) pow(2, $attempt)
+                    )
+                );
+            }
+
+            /*
+             * Small random jitter prevents repeatedly
+             * hitting the same API window.
+             */
+            $retryAfter += random_int(1, 3);
+
+            if ($attempt < $maxAttempts) {
+                sleep($retryAfter);
+                continue;
+            }
+
+            throw new RuntimeException(
+                'AniList rate limit is still active. Please try again shortly.'
+            );
+        }
+
+
+        /*
+         * Temporary server errors
+         */
+        if (
+            in_array(
+                $status,
+                [500, 502, 503, 504],
+                true
+            )
+        ) {
+
+            if ($attempt < $maxAttempts) {
+
+                $delay = min(
+                    20,
+                    $attempt * 3
+                );
+
+                sleep($delay);
+                continue;
+            }
+
+            throw new RuntimeException(
+                'AniList is temporarily unavailable.'
+            );
+        }
+
+
+        /*
+         * Network / timeout errors
+         */
+        if (
+            $body === false ||
+            $error !== ''
+        ) {
+
+            if ($attempt < $maxAttempts) {
+
+                $delay = min(
+                    15,
+                    $attempt * 2
+                );
+
+                sleep($delay);
+                continue;
+            }
+
+            throw new RuntimeException(
+                $error ?: 'AniList network request failed.'
+            );
+        }
+
+
+        /*
+         * Non-retryable HTTP errors
+         */
         throw new RuntimeException(
             'AniList returned HTTP ' . $status
         );
     }
 
-    $json = json_decode($body, true);
-
-    if (!is_array($json)) {
-        throw new RuntimeException(
-            'Invalid response from AniList.'
-        );
-    }
-
-    if (!empty($json['errors'])) {
-        throw new RuntimeException(
-            $json['errors'][0]['message'] ?? 'AniList API error.'
-        );
-    }
-
-    return $json['data'] ?? [];
+    throw new RuntimeException(
+        'AniList request could not be completed.'
+    );
 }
 
 function anilist_search_characters($name)
@@ -340,4 +498,123 @@ function anilist_character_aliases($character)
     );
 
     return array_values(array_unique($aliases));
+}
+
+function anilist_normalize_name($name)
+{
+    $name = strtolower(
+        trim((string) $name)
+    );
+
+    $name = preg_replace(
+        '/[^a-z0-9]+/i',
+        '',
+        $name
+    );
+
+    return $name;
+}
+
+
+function anilist_best_character_match($searchName, $results)
+{
+    if (!$results) {
+        return null;
+    }
+
+    $wanted = anilist_normalize_name(
+        $searchName
+    );
+
+    /*
+     * First: exact full/native/alternative match.
+     */
+    foreach ($results as $character) {
+
+        $candidateNames = [];
+
+        if (!empty(
+            $character['name']['full']
+        )) {
+            $candidateNames[] =
+                $character['name']['full'];
+        }
+
+        if (!empty(
+            $character['name']['native']
+        )) {
+            $candidateNames[] =
+                $character['name']['native'];
+        }
+
+        foreach (
+            $character['name']['alternative']
+                ?? []
+            as $alternative
+        ) {
+            $candidateNames[] =
+                $alternative;
+        }
+
+        foreach (
+            $candidateNames
+            as $candidate
+        ) {
+
+            if (
+                anilist_normalize_name(
+                    $candidate
+                ) === $wanted
+            ) {
+                return $character;
+            }
+        }
+    }
+
+
+    /*
+     * Second: similarity scoring.
+     */
+    $best = null;
+    $bestScore = 0;
+
+    foreach ($results as $character) {
+
+        $fullName =
+            $character['name']['full']
+            ?? '';
+
+        $normalized =
+            anilist_normalize_name(
+                $fullName
+            );
+
+        if (
+            $wanted === '' ||
+            $normalized === ''
+        ) {
+            continue;
+        }
+
+        similar_text(
+            $wanted,
+            $normalized,
+            $score
+        );
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $best = $character;
+        }
+    }
+
+
+    /*
+     * Avoid importing a very unrelated result.
+     */
+    if ($bestScore < 55) {
+        return null;
+    }
+
+    return $best;
 }

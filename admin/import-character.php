@@ -268,7 +268,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 /*
                  * Best search match = first result.
                  */
-                $match = $searchResults[0];
+                $match = anilist_best_character_match(
+                    $inputName,
+                    $searchResults
+                );
+
+                if (!$match) {
+
+                    $bulkResults[] = [
+                        'status' => 'failed',
+                        'input' => $inputName,
+                        'name' => $inputName,
+                        'message' => 'No accurate character match found.'
+                    ];
+
+                    continue;
+                }
 
                 $anilistId = (int) (
                     $match['id'] ?? 0
@@ -322,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 /*
                  * Gentle delay between AniList requests.
                  */
-                usleep(350000);
+                usleep(1250000);
 
             } catch (Throwable $exception) {
 
