@@ -5229,3 +5229,434 @@ select {
 
 }
 
+
+/* =========================================================
+   WATCH LIBRARY
+========================================================= */
+
+.watch-library-hero {
+    min-height: 430px;
+    display: flex;
+    align-items: end;
+}
+
+.watch-library-count {
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.stream-card {
+    position: relative;
+}
+
+.stream-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.stream-card-body h3 {
+    min-height: 45px;
+}
+
+.stream-watch-button {
+    margin-top: auto;
+}
+
+@media (max-width: 600px) {
+
+    .watch-library-hero {
+        min-height: 340px;
+    }
+
+}
+
+
+/* =========================================================
+   ANISCOPE — MOBILE RESPONSIVE FIX
+========================================================= */
+
+@media (max-width: 760px) {
+
+    /* -----------------------------------------
+       GLOBAL
+    ----------------------------------------- */
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .container {
+        width: calc(100% - 20px) !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    img,
+    video,
+    iframe {
+        max-width: 100%;
+    }
+
+
+    /* -----------------------------------------
+       HEADER / NAVIGATION
+    ----------------------------------------- */
+
+    .site-header .nav-wrap {
+        min-height: 68px;
+    }
+
+    .brand span {
+        font-size: 14px;
+    }
+
+    .brand em {
+        font-size: 7px;
+    }
+
+    .main-nav {
+        width: calc(100% - 20px) !important;
+        max-width: none !important;
+
+        left: 10px !important;
+        right: 10px !important;
+
+        padding: 14px !important;
+
+        border-radius: 14px !important;
+
+        overflow-y: auto;
+        max-height: calc(100vh - 90px);
+    }
+
+    .main-nav.open {
+        display: flex;
+    }
+
+    .main-nav a {
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: 8px;
+    }
+
+    .nav-search {
+        width: 100%;
+        margin-top: 6px;
+    }
+
+    .nav-search input {
+        width: 100%;
+        min-width: 0;
+    }
+
+
+    /* -----------------------------------------
+       PAGE HERO
+    ----------------------------------------- */
+
+    .page-hero,
+    .watch-library-hero {
+        min-height: 300px !important;
+        padding-top: 110px !important;
+        padding-bottom: 40px !important;
+    }
+
+    .page-hero h1 {
+        font-size: clamp(38px, 12vw, 58px) !important;
+        line-height: .95 !important;
+    }
+
+    .page-hero p {
+        max-width: 100%;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+
+    /* -----------------------------------------
+       SECTION HEADINGS
+    ----------------------------------------- */
+
+    .section-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .section-heading h2 {
+        font-size: 26px !important;
+    }
+
+    .text-link {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+
+    /* -----------------------------------------
+       STREAM / WATCH CARDS
+    ----------------------------------------- */
+
+    .stream-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .stream-card {
+        min-width: 0;
+        border-radius: 13px;
+    }
+
+    .stream-card-poster {
+        width: 100%;
+        aspect-ratio: 2 / 3;
+    }
+
+    .stream-card-play {
+        width: 42px;
+        height: 42px;
+        font-size: 13px;
+    }
+
+    .stream-card-body {
+        padding: 11px !important;
+    }
+
+    .stream-card-body .eyebrow {
+        font-size: 7px;
+    }
+
+    .stream-card-body h3 {
+        min-height: 0 !important;
+        margin: 4px 0 6px;
+        font-size: 13px !important;
+        line-height: 1.3;
+    }
+
+    .stream-card-body p {
+        min-height: 0 !important;
+        margin-bottom: 10px;
+        font-size: 9px;
+        line-height: 1.5;
+
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .stream-watch-button {
+        min-height: 36px;
+        padding: 8px 7px !important;
+        font-size: 9px !important;
+    }
+
+
+    /* -----------------------------------------
+       NORMAL ARTICLE CARDS
+    ----------------------------------------- */
+
+    .card-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .content-card {
+        width: 100%;
+    }
+
+
+    /* -----------------------------------------
+       WATCH PLAYER PAGE
+    ----------------------------------------- */
+
+    .watch-page {
+        padding-top: 80px !important;
+    }
+
+    .watch-layout {
+        display: flex !important;
+        flex-direction: column !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        overflow: hidden;
+    }
+
+    /* Player first */
+    .watch-player-column {
+        order: 1 !important;
+
+        width: 100% !important;
+
+        padding: 8px !important;
+    }
+
+    .watch-player-heading {
+        display: block !important;
+        margin-bottom: 12px;
+    }
+
+    .watch-player-heading h1 {
+        font-size: 22px !important;
+        line-height: 1.15;
+    }
+
+    .watch-episode-badge {
+        display: inline-flex;
+        margin-top: 9px;
+    }
+
+    .watch-player-column .aniscope-player {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+    }
+
+    .watch-player-column .aniscope-video-wrap {
+        width: 100% !important;
+        max-height: none !important;
+        aspect-ratio: 16 / 9 !important;
+    }
+
+    .watch-navigation {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+
+    .watch-navigation .button {
+        width: 100%;
+        padding: 9px 5px !important;
+        font-size: 9px;
+    }
+
+
+    /* Episode list second */
+    .watch-episodes {
+        order: 2 !important;
+
+        width: 100% !important;
+
+        border-right: 0 !important;
+        border-top:
+            1px solid rgba(255,255,255,.07);
+    }
+
+    .episode-list {
+        max-height: 320px !important;
+        overflow-y: auto;
+    }
+
+    .episode-item {
+        min-height: 50px;
+    }
+
+
+    /* Details third */
+    .watch-details {
+        order: 3 !important;
+
+        width: 100% !important;
+
+        display: grid !important;
+        grid-template-columns: 95px minmax(0,1fr) !important;
+        gap: 14px !important;
+
+        padding: 15px !important;
+
+        border-left: 0 !important;
+    }
+
+    .watch-detail-poster {
+        width: 95px !important;
+        height: 140px !important;
+        max-height: none !important;
+        margin: 0 !important;
+    }
+
+    .watch-detail-copy {
+        min-width: 0;
+    }
+
+    .watch-details h2 {
+        font-size: 19px !important;
+    }
+
+    .watch-details p {
+        grid-column: 1 / -1;
+        font-size: 10px;
+    }
+
+    .watch-detail-facts {
+        grid-column: 1 / -1;
+    }
+
+
+    /* -----------------------------------------
+       ARTICLE WATCH CTA
+    ----------------------------------------- */
+
+    .article-watch-inner {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+
+        padding: 22px 0;
+    }
+
+    .article-watch-inner h2 {
+        font-size: 26px !important;
+    }
+
+    .article-watch-inner .button {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 430px) {
+
+    .container {
+        width: calc(100% - 14px) !important;
+    }
+
+    .stream-card-grid {
+        gap: 7px !important;
+    }
+
+    .stream-card-body {
+        padding: 8px !important;
+    }
+
+    .stream-card-body h3 {
+        font-size: 12px !important;
+    }
+
+    .stream-watch-button {
+        font-size: 8px !important;
+    }
+
+    .watch-details {
+        grid-template-columns:
+            82px minmax(0,1fr) !important;
+    }
+
+    .watch-detail-poster {
+        width: 82px !important;
+        height: 123px !important;
+    }
+
+}

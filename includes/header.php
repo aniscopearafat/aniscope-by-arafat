@@ -144,7 +144,8 @@ $bodyClass = $bodyClass ?? '';
                 'Anime'      => '/anime.php',
                 'Characters' => '/characters.php',
                 'Manga'      => '/manga.php',
-                'News'       => '/news.php'
+                'News'       => '/news.php',
+                'Watch'      => '/watch.php'
             ];
 
             ?>

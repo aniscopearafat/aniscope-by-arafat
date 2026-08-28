@@ -34,6 +34,116 @@ $anime = $animeId
     : [];
 
 
+/*
+|--------------------------------------------------------------------------
+| Public Watch Library
+|--------------------------------------------------------------------------
+|
+| When /watch.php is opened without ?anime=,
+| show all published streaming anime/seasons as cards.
+|
+*/
+
+if (!$animeId) {
+
+    $watchAnimeList = stream_anime_list(true);
+
+    $pageTitle = 'Watch Anime — AniScope by Arafat';
+    $activePage = 'watch';
+
+    require __DIR__ . '/includes/header.php';
+    require_once __DIR__ . '/includes/cards.php';
+
+    ?>
+
+    <section class="page-hero watch-library-hero">
+
+        <div class="container reveal">
+
+            <span class="eyebrow">
+                AniScope Streaming
+            </span>
+
+            <h1>
+                Watch Anime
+            </h1>
+
+            <p>
+                Browse all available anime and seasons,
+                then start watching instantly.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <section class="section section-dark">
+
+        <div class="container">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        Streaming Library
+                    </span>
+
+                    <h2>
+                        Available Anime
+                    </h2>
+
+                </div>
+
+                <span class="watch-library-count">
+                    <?= count($watchAnimeList) ?>
+                    title<?= count($watchAnimeList) === 1 ? '' : 's' ?>
+                </span>
+
+            </div>
+
+
+            <?php if ($watchAnimeList): ?>
+
+                <div class="stream-card-grid">
+
+                    <?php foreach ($watchAnimeList as $watchAnime): ?>
+
+                        <?php
+                        stream_anime_card($watchAnime);
+                        ?>
+
+                    <?php endforeach; ?>
+
+                </div>
+
+            <?php else: ?>
+
+                <?php
+                empty_state(
+                    'No anime videos have been published yet.'
+                );
+                ?>
+
+            <?php endif; ?>
+
+
+            <?php show_native_ad(); ?>
+
+        </div>
+
+    </section>
+
+
+    <?php
+
+    require __DIR__ . '/includes/footer.php';
+
+    exit;
+}
+
+
 if (
     !$anime ||
     empty($anime['is_published'])
@@ -265,7 +375,7 @@ $pageTitle =
     $videoTitle
     . ' — AniScope';
 
-$activePage = '';
+$activePage = 'watch';
 
 require __DIR__ . '/includes/header.php';
 
