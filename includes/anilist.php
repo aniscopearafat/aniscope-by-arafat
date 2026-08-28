@@ -165,13 +165,179 @@ function anilist_character_image($character)
     return '/assets/images/character-blue.svg';
 }
 
+function anilist_clean_text($text)
+{
+    $text = (string) $text;
+
+    // AniList spoiler markers
+    $text = str_replace(['~!', '!~'], '', $text);
+
+    // Markdown links: [Naruto](https://...) -> Naruto
+    $text = preg_replace(
+        '/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/i',
+        '$1',
+        $text
+    );
+
+    // Escaped / malformed AniList links
+    $text = preg_replace(
+        '/\[([^\]]+)\]\\?\((https?:\/\/[^)]+)\)/i',
+        '$1',
+        $text
+    );
+
+    // Markdown formatting
+    $text = str_replace(
+        ['__', '**', '###', '##', '#'],
+        '',
+        $text
+    );
+
+    // Remove remaining URLs
+    $text = preg_replace(
+        '~https?://\S+~i',
+        '',
+        $text
+    );
+
+    // Normalize newlines
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+    // Remove excessive spaces
+    $text = preg_replace('/[ \t]+/', ' ', $text);
+
+    // Clean spaces before punctuation
+    $text = preg_replace('/\s+([,.!?;:])/', '$1', $text);
+
+    // Clean excessive blank lines
+    $text = preg_replace("/\n{3,}/", "\n\n", $text);
+
+    return trim($text);
+}
+
+
 function anilist_character_bio($character)
 {
-    $bio = trim((string) ($character['description'] ?? ''));
+    $bio = anilist_clean_text(
+        $character['description'] ?? ''
+    );
 
     if ($bio === '') {
         return 'Biography information is not available yet.';
     }
 
-    return strip_tags($bio);
+    return $bio;
+}
+
+
+function anilist_character_abilities($character)
+{
+    $bio = anilist_character_bio($character);
+
+    if ($bio === '') {
+        return 'Abilities information is not available yet.';
+    }
+
+    $abilities = [];
+
+    $patterns = [
+        'jinchuuriki' => 'Jinchūriki abilities',
+        'jinchūriki' => 'Jinchūriki abilities',
+        'tailed beast' => 'Tailed Beast power',
+        'shukaku' => 'Power of Shukaku',
+        'sharingan' => 'Sharingan',
+        'mangekyou' => 'Mangekyō Sharingan',
+        'mangekyō' => 'Mangekyō Sharingan',
+        'byakugan' => 'Byakugan',
+        'rasengan' => 'Rasengan',
+        'chidori' => 'Chidori',
+        'sage mode' => 'Sage Mode',
+        'domain expansion' => 'Domain Expansion',
+        'cursed energy' => 'Cursed Energy',
+        'six eyes' => 'Six Eyes',
+        'limitless' => 'Limitless',
+        'one for all' => 'One For All',
+        'devil fruit' => 'Devil Fruit abilities',
+        'bankai' => 'Bankai',
+        'zanpakuto' => 'Zanpakutō',
+        'alchemy' => 'Alchemy',
+        'magic' => 'Magic abilities',
+        'chakra' => 'Chakra control',
+        'swordsmanship' => 'Swordsmanship'
+    ];
+
+    $lower = strtolower($bio);
+
+    foreach ($patterns as $needle => $label) {
+        if (strpos($lower, $needle) !== false) {
+            $abilities[] = $label;
+        }
+    }
+
+    /*
+     * Try to detect useful power-related sentences from the biography.
+     */
+    $sentences = preg_split(
+        '/(?<=[.!?])\s+/',
+        str_replace("\n", ' ', $bio)
+    );
+
+    foreach ($sentences as $sentence) {
+        $sentence = trim($sentence);
+
+        if ($sentence === '') {
+            continue;
+        }
+
+        $sentenceLower = strtolower($sentence);
+
+        $keywords = [
+            'ability',
+            'power',
+            'technique',
+            'jutsu',
+            'jinchuuriki',
+            'jinchūriki',
+            'tailed beast',
+            'chakra',
+            'magic',
+            'curse',
+            'weapon'
+        ];
+
+        foreach ($keywords as $keyword) {
+            if (strpos($sentenceLower, $keyword) !== false) {
+
+                if (strlen($sentence) <= 160) {
+                    $abilities[] = $sentence;
+                }
+
+                break;
+            }
+        }
+
+        if (count($abilities) >= 5) {
+            break;
+        }
+    }
+
+    $abilities = array_values(array_unique($abilities));
+
+    if (!$abilities) {
+        return 'Special combat abilities and techniques.';
+    }
+
+    return implode(', ', array_slice($abilities, 0, 5));
+}
+
+
+function anilist_character_aliases($character)
+{
+    $aliases = $character['name']['alternative'] ?? [];
+
+    $aliases = array_filter(
+        array_map('trim', $aliases)
+    );
+
+    return array_values(array_unique($aliases));
 }

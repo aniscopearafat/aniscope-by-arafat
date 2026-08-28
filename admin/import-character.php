@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'name' => $name,
             'anime_name' => anilist_character_series($character),
             'bio' => anilist_character_bio($character),
-            'abilities' => 'Add abilities from the character editor.',
+            'abilities' => anilist_character_abilities($character),
             'image_url' => anilist_character_image($character)
         ];
 
